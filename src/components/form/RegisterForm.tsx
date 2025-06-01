@@ -3,41 +3,32 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { authService, LoginCredentials, loginSchema } from "@/lib/auth-service";
+import { Link, useNavigate } from "react-router-dom";
+import { authService, RegisterCredentials, registerSchema } from "@/lib/auth-service";
 import { useState } from "react";
 
-export function LoginForm() {
+export function RegisterForm() {
     const navigate = useNavigate();
-    const location = useLocation();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    const from = location.state?.from?.pathname || '/';
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<LoginCredentials>({
-        resolver: zodResolver(loginSchema)
+    } = useForm<RegisterCredentials>({
+        resolver: zodResolver(registerSchema)
     });
 
-    const onSubmit = async (data: LoginCredentials) => {
+    const onSubmit = async (data: RegisterCredentials) => {
         try {
             setIsLoading(true);
             setError(null);
-            await authService.login(data);
-            navigate(from, { replace: true });
-        } catch (error: any) {
-            console.error('Ошибка при входе:', error);
-            if (error.response?.status === 401) {
-                setError('Неверный логин или пароль');
-            } else if (error.response?.status === 400) {
-                setError('Проверьте правильность введенных данных');
-            } else {
-                setError('Произошла ошибка при входе. Попробуйте позже');
-            }
+            const response = await authService.register(data);
+            navigate('/');
+        } catch (error) {
+            console.error('Ошибка при регистрации:', error);
+            setError('Ошибка при регистрации. Возможно, такой пользователь уже существует.');
         } finally {
             setIsLoading(false);
         }
@@ -47,7 +38,7 @@ export function LoginForm() {
         <div className="flex items-center justify-center">
             <Card className="w-96 p-6 shadow-lg">
                 <CardContent>
-                    <h2 className="text-center text-2xl font-semibold mb-4">Авторизация</h2>
+                    <h2 className="text-center text-2xl font-semibold mb-4">Регистрация</h2>
                     {error && (
                         <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
                             {error}
@@ -55,7 +46,7 @@ export function LoginForm() {
                     )}
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium">Введите свой никнейм:</label>
+                            <label className="block text-sm font-medium">Никнейм:</label>
                             <Input 
                                 type="text" 
                                 {...register("nickname")}
@@ -66,7 +57,18 @@ export function LoginForm() {
                             )}
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium">Ваш пароль:</label>
+                            <label className="block text-sm font-medium">Email:</label>
+                            <Input 
+                                type="email" 
+                                {...register("email")}
+                                className={errors.email ? "border-red-500" : ""}
+                            />
+                            {errors.email && (
+                                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                            )}
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium">Пароль:</label>
                             <Input 
                                 type="password" 
                                 {...register("password")}
@@ -81,20 +83,20 @@ export function LoginForm() {
                             className="w-full"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Вход...' : 'Войти'}
+                            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
                         </Button>
                     </form>
                     <div className="mt-6 border-t pt-4 text-center text-sm">
-                        Первый раз у нас?
+                        Уже есть аккаунт?
                     </div>
                     <Link 
-                        to="/register" 
+                        to="/login" 
                         className="block w-full text-center mt-2 text-blue-600 hover:text-blue-800"
                     >
-                        Зарегистрироваться
+                        Войти
                     </Link>
                 </CardContent>
             </Card>
         </div>
     );
-}
+} 

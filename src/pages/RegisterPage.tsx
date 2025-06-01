@@ -1,12 +1,11 @@
-import {LoginForm} from "@/components/form/LoginForm.tsx";
+import { RegisterForm } from "@/components/form/RegisterForm";
 
-export function LoginPage(){
-    return(
+export function RegisterPage() {
+    return (
         <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-background to-muted">
             <div className="w-full max-w-md p-4">
-                <LoginForm/>
+                <RegisterForm />
             </div>
         </div>
-    )
-}
-
+    );
+} 

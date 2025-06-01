@@ -1,9 +1,46 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Modern CSS Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100%;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+#root {
+  isolation: isolate;
+  height: 100%;
+}
 
 @layer base {
   :root {
@@ -93,14 +130,13 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
   }
+}
 
+@layer components {
   .messenger-layout {
-    height: 100vh;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: 1fr;
+    @apply h-screen grid grid-cols-[auto_1fr] grid-rows-1;
   }
 
   .glass-effect {
@@ -120,6 +156,6 @@
   }
 
   .animate-in {
-    animation: fade-in 0.5s ease-out forwards;
+    @apply animate-[fade-in_0.5s_ease-out_forwards];
   }
 }

@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ChevronRight, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { authService } from "@/lib/auth-service"
+import { useNavigate } from "react-router-dom"
 
 interface ProfileDrawerProps {
   open: boolean
@@ -16,6 +17,13 @@ interface ProfileDrawerProps {
 }
 
 export function ProfileDrawer({ open, onClose, className }: ProfileDrawerProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login');
+  };
+
   return (
     <div 
       className={cn(
@@ -126,7 +134,11 @@ export function ProfileDrawer({ open, onClose, className }: ProfileDrawerProps) 
         </Tabs>
         
         <div className="pt-6 border-t border-border mt-6">
-          <Button variant="ghost" className="w-full justify-between">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-between"
+            onClick={handleLogout}
+          >
             Выйти
             <ChevronRight className="h-4 w-4" />
           </Button>

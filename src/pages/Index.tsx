@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
@@ -7,6 +6,8 @@ import { ChatArea } from "@/components/chat-area"
 import { ProfileDrawer } from "@/components/profile-drawer"
 import { Button } from "@/components/ui/button"
 import { User } from "lucide-react"
+import Navigation from '@/components/Navigation'
+import { APP_STRINGS } from '@/constants/strings'
 
 const Index = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
@@ -14,6 +15,7 @@ const Index = () => {
 
   return (
     <ThemeProvider defaultTheme="light">
+      <Navigation />
       <div className="relative flex h-screen overflow-hidden">
         {/* Main sidebar */}
         <Sidebar />
@@ -33,11 +35,11 @@ const Index = () => {
                 <div className="bg-muted/50 rounded-full p-6 mb-4">
                   <User className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-medium mb-2">Выберите диалог</h3>
+                <h3 className="text-xl font-medium mb-2">{APP_STRINGS.SELECT_CONVERSATION}</h3>
                 <p className="text-muted-foreground mb-6 max-w-md">
-                  Выберите существующий диалог из списка слева или начните новую беседу
+                  {APP_STRINGS.SELECT_CONVERSATION_DESCRIPTION}
                 </p>
-                <Button>Новое сообщение</Button>
+                <Button>{APP_STRINGS.NEW_MESSAGE}</Button>
               </div>
             )}
             
