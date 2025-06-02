@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authService, LoginCredentials, loginSchema } from "@/lib/auth-service";
 import { useState } from "react";
+import { AxiosError } from "axios";
 
 export function LoginForm() {
     const navigate = useNavigate();
@@ -29,15 +30,17 @@ export function LoginForm() {
             setError(null);
             await authService.login(data);
             navigate(from, { replace: true });
-        } catch (error: any) {
-            console.error('Ошибка при входе:', error);
-            if (error.response?.status === 401) {
-                setError('Неверный логин или пароль');
-            } else if (error.response?.status === 400) {
-                setError('Проверьте правильность введенных данных');
-            } else {
-                setError('Произошла ошибка при входе. Попробуйте позже');
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 401) {
+                    setError('Неверный логин или пароль');
+                } else if (error.response?.status === 400) {
+                    setError('Проверьте правильность введенных данных');
+                } else {
+                    setError('Произошла ошибка при входе. Попробуйте позже');
+                }
             }
+
         } finally {
             setIsLoading(false);
         }
@@ -56,7 +59,8 @@ export function LoginForm() {
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <div className="mb-4">
                             <label className="block text-sm font-medium">Введите свой никнейм:</label>
-                            <Input 
+                            <Input
+                                autoComplete="username" 
                                 type="text" 
                                 {...register("nickname")}
                                 className={errors.nickname ? "border-red-500" : ""}
@@ -68,6 +72,7 @@ export function LoginForm() {
                         <div className="mb-4">
                             <label className="block text-sm font-medium">Ваш пароль:</label>
                             <Input 
+                                autoComplete="current-password"
                                 type="password" 
                                 {...register("password")}
                                 className={errors.password ? "border-red-500" : ""}

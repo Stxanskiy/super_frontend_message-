@@ -2,7 +2,7 @@ import { apiClient, setAuthToken } from './api-client';
 import { z } from 'zod';
 
 type AccessToken = {
-    userId: string
+    user_id: string
 }
 
 function decodeJwt(token: string | undefined): AccessToken | null {
@@ -46,8 +46,6 @@ export const registerSchema = z.object({
         .email("Неверный формат email"),
     password: z.string()
         .min(1, "Пароль должен содержать минимум 6 символов")
-        .regex(/[A-Z]/, "Пароль должен содержать хотя бы одну заглавную букву")
-        .regex(/[0-9]/, "Пароль должен содержать хотя бы одну цифру")
 });
 
 // Генерируем типы из схем
@@ -75,6 +73,7 @@ class AuthService {
 
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+        console.log(response)
         const { data, success } = response.data;
         const { accessToken, refreshToken } = data;
         
@@ -84,29 +83,30 @@ class AuthService {
 
         const decodedToken = decodeJwt(accessToken);
         console.log(decodedToken)
-        if (!decodedToken?.userId) {
+        if (!decodedToken?.user_id) {
             throw new Error('Invalid token format or missing user ID');
         }
 
-        this.setAuthData(accessToken, refreshToken, decodedToken.userId);
+        this.setAuthData(accessToken, refreshToken, decodedToken.user_id);
         return response.data;
     }
 
     async register(credentials: RegisterCredentials): Promise<AuthResponse> {
         const response = await apiClient.post<AuthResponse>('/auth/register', credentials);
+        console.log(response)
         const { data, success } = response.data;
         const { accessToken, refreshToken } = data;
         
         if (!success || !accessToken) {
             throw new Error('No access token received');
         }
-
         const decodedToken = decodeJwt(accessToken);
-        if (!decodedToken?.userId) {
+        console.log("decodedToken", decodedToken)
+        if (!decodedToken?.user_id) {
             throw new Error('Invalid token format or missing user ID');
         }
 
-        this.setAuthData(accessToken, refreshToken, decodedToken.userId);
+        this.setAuthData(accessToken, refreshToken, decodedToken.user_id);
         return response.data;
     }
 

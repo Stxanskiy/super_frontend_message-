@@ -48,6 +48,7 @@ export function RegisterForm() {
                         <div className="mb-4">
                             <label className="block text-sm font-medium">Никнейм:</label>
                             <Input 
+                                autoComplete="username"
                                 type="text" 
                                 {...register("nickname")}
                                 className={errors.nickname ? "border-red-500" : ""}
@@ -59,6 +60,7 @@ export function RegisterForm() {
                         <div className="mb-4">
                             <label className="block text-sm font-medium">Email:</label>
                             <Input 
+                                autoComplete="email"
                                 type="email" 
                                 {...register("email")}
                                 className={errors.email ? "border-red-500" : ""}
@@ -69,7 +71,8 @@ export function RegisterForm() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium">Пароль:</label>
-                            <Input 
+                            <Input
+                                autoComplete="new-password"
                                 type="password" 
                                 {...register("password")}
                                 className={errors.password ? "border-red-500" : ""}
