@@ -1,6 +1,6 @@
 export const API_CONFIG = {
   // API URLs
-  AUTH_URL: 'https://f13d-195-200-31-207.ngrok-free.app',
+  AUTH_URL: 'http://localhost:8080',
   USER_URL: 'http://localhost:8081',
   MESSAGE_URL: 'http://localhost:8083',
   API_URL: 'http://localhost:8083',
