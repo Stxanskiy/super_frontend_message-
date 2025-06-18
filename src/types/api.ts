@@ -1,9 +1,14 @@
 // Типы для API ответов в соответствии с документацией
 
-// Auth API
+// Auth API - поддерживаем разные структуры ответов
 export interface AuthResponse {
-  access_token: string;
-  user_id: string;
+  success?: boolean;
+  data?: {
+    access_token: string;
+    user_id: string;
+  };
+  access_token?: string;
+  user_id?: string;
 }
 
 // User API
@@ -30,7 +35,24 @@ export interface FriendRequest {
 }
 
 export interface SearchUsersResponse {
-  users: UserProfile[];
+  success?: boolean;
+  data?: UserProfile[];
+  users?: UserProfile[];
+}
+
+export interface UserProfileResponse {
+  success?: boolean;
+  data?: UserProfile;
+}
+
+export interface FriendRequestsResponse {
+  success?: boolean;
+  data?: FriendRequest[];
+}
+
+export interface FriendsResponse {
+  success?: boolean;
+  data?: UserProfile[];
 }
 
 // Chat API

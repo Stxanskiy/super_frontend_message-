@@ -26,6 +26,11 @@ export const messageClient = axios.create({
 // Функция для добавления токена к запросам
 const addAuthToken = (config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
+  console.log('addAuthToken: adding token to request', { 
+    url: config.url, 
+    hasToken: !!token,
+    token: token ? token.substring(0, 20) + '...' : null 
+  });
   if (token) {
     config.headers.Authorization = `${API_CONFIG.AUTH_TOKEN_PREFIX}${token}`;
   }
@@ -38,7 +43,13 @@ messageClient.interceptors.request.use(addAuthToken);
 
 // Интерцепторы для обработки ошибок
 const handleResponseError = (error: AxiosError) => {
+  console.log('API Error:', { 
+    status: error.response?.status, 
+    url: error.config?.url,
+    message: error.message 
+  });
   if (error.response?.status === 401) {
+    console.log('Unauthorized error, clearing auth data');
     localStorage.removeItem(API_CONFIG.TOKEN_KEY);
     localStorage.removeItem(API_CONFIG.USER_ID_KEY);
   }
@@ -46,12 +57,26 @@ const handleResponseError = (error: AxiosError) => {
 };
 
 userClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('User API Response:', { 
+      status: response.status, 
+      url: response.config.url,
+      data: response.data 
+    });
+    return response;
+  },
   handleResponseError
 );
 
 messageClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Message API Response:', { 
+      status: response.status, 
+      url: response.config.url,
+      data: response.data 
+    });
+    return response;
+  },
   handleResponseError
 );
 
@@ -59,6 +84,7 @@ messageClient.interceptors.response.use(
 export const apiClient = authClient;
 
 export const setAuthToken = (token: string) => {
+  console.log('setAuthToken: setting token', { token: token.substring(0, 20) + '...' });
   localStorage.setItem(API_CONFIG.TOKEN_KEY, token);
   // Обновляем заголовки для всех клиентов
   userClient.defaults.headers.common['Authorization'] = `${API_CONFIG.AUTH_TOKEN_PREFIX}${token}`;
@@ -66,6 +92,7 @@ export const setAuthToken = (token: string) => {
 };
 
 export const removeAuthToken = () => {
+  console.log('removeAuthToken: clearing token');
   localStorage.removeItem(API_CONFIG.TOKEN_KEY);
   localStorage.removeItem(API_CONFIG.USER_ID_KEY);
   // Удаляем заголовки для всех клиентов

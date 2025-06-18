@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authService, RegisterCredentials, registerSchema } from "@/lib/auth-service";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { AxiosError } from "axios";
 
 export function RegisterForm() {
     const navigate = useNavigate();
@@ -26,12 +27,28 @@ export function RegisterForm() {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await authService.register(data);
+            console.log('RegisterForm: attempting registration...');
+            await authService.register(data);
+            console.log('RegisterForm: registration successful, calling login()');
             login();
-            navigate('/');
-        } catch (error) {
-            console.error('Ошибка при регистрации:', error);
-            setError('Ошибка при регистрации. Возможно, такой пользователь уже существует.');
+            console.log('RegisterForm: navigating to home');
+            // Добавляем небольшую задержку для обновления состояния
+            setTimeout(() => {
+                navigate('/');
+            }, 100);
+        } catch (error: unknown) {
+            console.error('RegisterForm: registration error:', error);
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 400) {
+                    setError('Проверьте правильность введенных данных');
+                } else if (error.response?.status === 409) {
+                    setError('Пользователь с таким никнеймом или email уже существует');
+                } else {
+                    setError('Ошибка при регистрации. Попробуйте позже');
+                }
+            } else {
+                setError('Ошибка при регистрации. Попробуйте позже');
+            }
         } finally {
             setIsLoading(false);
         }

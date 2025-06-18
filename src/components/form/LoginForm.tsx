@@ -30,10 +30,16 @@ export function LoginForm() {
         try {
             setIsLoading(true);
             setError(null);
+            console.log('LoginForm: attempting login...');
             await authService.login(data);
+            console.log('LoginForm: login successful, calling login()');
             login();
-            navigate(from, { replace: true });
+            console.log('LoginForm: navigating to:', from);
+            setTimeout(() => {
+                navigate(from, { replace: true });
+            }, 100);
         } catch (error: unknown) {
+            console.error('LoginForm: login error:', error);
             if (error instanceof AxiosError) {
                 if (error.response?.status === 401) {
                     setError('Неверный логин или пароль');
@@ -42,8 +48,9 @@ export function LoginForm() {
                 } else {
                     setError('Произошла ошибка при входе. Попробуйте позже');
                 }
+            } else {
+                setError('Произошла ошибка при входе. Попробуйте позже');
             }
-
         } finally {
             setIsLoading(false);
         }

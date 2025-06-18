@@ -69,8 +69,26 @@ class AuthService {
         console.log('Attempting login with credentials:', credentials);
         const response = await authClient.post<AuthResponse>('/auth/login', credentials);
         console.log('Login response:', response.data);
+        console.log('Response type:', typeof response.data);
+        console.log('Response keys:', Object.keys(response.data));
         
-        const { access_token, user_id } = response.data;
+        // Проверяем разные возможные структуры ответа
+        let access_token: string | undefined;
+        let user_id: string | undefined;
+        
+        if (response.data.success && response.data.data) {
+            // Структура: { success: true, data: { access_token, user_id } }
+            access_token = response.data.data.access_token;
+            user_id = response.data.data.user_id;
+        } else if (response.data.access_token && response.data.user_id) {
+            // Структура: { access_token, user_id }
+            access_token = response.data.access_token;
+            user_id = response.data.user_id;
+        } else if (response.data.data && response.data.data.access_token) {
+            // Структура: { data: { access_token, user_id } }
+            access_token = response.data.data.access_token;
+            user_id = response.data.data.user_id;
+        }
         
         if (!access_token || !user_id) {
             console.error('Invalid response: missing access_token or user_id', response.data);
@@ -86,8 +104,26 @@ class AuthService {
         console.log('Attempting register with credentials:', credentials);
         const response = await authClient.post<AuthResponse>('/auth/register', credentials);
         console.log('Register response:', response.data);
+        console.log('Response type:', typeof response.data);
+        console.log('Response keys:', Object.keys(response.data));
         
-        const { access_token, user_id } = response.data;
+        // Проверяем разные возможные структуры ответа
+        let access_token: string | undefined;
+        let user_id: string | undefined;
+        
+        if (response.data.success && response.data.data) {
+            // Структура: { success: true, data: { access_token, user_id } }
+            access_token = response.data.data.access_token;
+            user_id = response.data.data.user_id;
+        } else if (response.data.access_token && response.data.user_id) {
+            // Структура: { access_token, user_id }
+            access_token = response.data.access_token;
+            user_id = response.data.user_id;
+        } else if (response.data.data && response.data.data.access_token) {
+            // Структура: { data: { access_token, user_id } }
+            access_token = response.data.data.access_token;
+            user_id = response.data.data.user_id;
+        }
         
         if (!access_token || !user_id) {
             console.error('Invalid response: missing access_token or user_id', response.data);
