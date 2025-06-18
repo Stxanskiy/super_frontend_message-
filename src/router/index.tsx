@@ -15,15 +15,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     useEffect(() => {
+        console.log('ProtectedRoute: checking auth...');
         checkAuth();
-        setIsLoading(false);
-    }, [checkAuth, location.pathname]);
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [checkAuth]);
+
+    console.log('ProtectedRoute: render', { isAuthenticated, isLoading });
 
     if (isLoading) {
-        return null; // или компонент загрузки
+        return <div>Загрузка...</div>;
     }
 
     if (!isAuthenticated) {
+        console.log('ProtectedRoute: redirecting to login');
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
@@ -37,15 +44,22 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     useEffect(() => {
+        console.log('PublicRoute: checking auth...');
         checkAuth();
-        setIsLoading(false);
-    }, [checkAuth, location.pathname]);
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [checkAuth]);
+
+    console.log('PublicRoute: render', { isAuthenticated, isLoading });
 
     if (isLoading) {
-        return null; // или компонент загрузки
+        return <div>Загрузка...</div>;
     }
 
     if (isAuthenticated) {
+        console.log('PublicRoute: redirecting to home');
         const from = location.state?.from?.pathname || '/';
         return <Navigate to={from} replace />;
     }

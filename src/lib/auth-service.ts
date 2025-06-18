@@ -62,45 +62,56 @@ class AuthService {
     constructor() {
         this.token = localStorage.getItem('token');
         this.userId = localStorage.getItem('userId');
+        console.log('AuthService initialized:', { token: !!this.token, userId: this.userId });
     }
 
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
+        console.log('Attempting login with credentials:', credentials);
         const response = await authClient.post<AuthResponse>('/auth/login', credentials);
         console.log('Login response:', response.data);
         
         const { access_token, user_id } = response.data;
         
         if (!access_token || !user_id) {
+            console.error('Invalid response: missing access_token or user_id', response.data);
             throw new Error('Invalid response: missing access_token or user_id');
         }
 
+        console.log('Setting auth data:', { access_token: !!access_token, user_id });
         this.setAuthData(access_token, user_id);
         return response.data;
     }
 
     async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+        console.log('Attempting register with credentials:', credentials);
         const response = await authClient.post<AuthResponse>('/auth/register', credentials);
         console.log('Register response:', response.data);
         
         const { access_token, user_id } = response.data;
         
         if (!access_token || !user_id) {
+            console.error('Invalid response: missing access_token or user_id', response.data);
             throw new Error('Invalid response: missing access_token or user_id');
         }
 
+        console.log('Setting auth data:', { access_token: !!access_token, user_id });
         this.setAuthData(access_token, user_id);
         return response.data;
     }
 
     logout() {
+        console.log('Logging out');
         this.clearAuthData();
     }
 
     isAuthenticated(): boolean {
-        return !!this.token;
+        const hasToken = !!this.token;
+        console.log('Checking authentication:', { hasToken, userId: this.userId });
+        return hasToken;
     }
 
     getUserId(): string | null {
+        console.log('Getting userId:', this.userId);
         return this.userId;
     }
 
@@ -109,14 +120,17 @@ class AuthService {
     }
 
     private setAuthData(token: string, userId: string) {
+        console.log('Setting auth data:', { token: !!token, userId });
         this.token = token;
         this.userId = userId;
         localStorage.setItem('token', token);
         localStorage.setItem('userId', userId);
         setAuthToken(token);
+        console.log('Auth data set successfully');
     }
 
     private clearAuthData() {
+        console.log('Clearing auth data');
         this.token = null;
         this.userId = null;
         localStorage.removeItem('token');
