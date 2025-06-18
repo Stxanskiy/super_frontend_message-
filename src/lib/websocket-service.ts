@@ -21,15 +21,22 @@ class WebSocketService {
   private isConnecting = false;
 
   constructor() {
-    this.connect();
+    // Не подключаемся автоматически при создании
+    // Подключение будет происходить только при наличии токена
   }
 
-  private connect() {
+  private connectInternal() {
     if (this.isConnecting) return;
     
-    this.isConnecting = true;
     const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
+    if (!token) {
+      console.log('WebSocket: No token available, skipping connection');
+      return;
+    }
+    
+    this.isConnecting = true;
     const wsUrl = `${API_CONFIG.WS_URL}?token=${token}`;
+    console.log('WebSocket: Connecting to', wsUrl);
     
     this.ws = new WebSocket(wsUrl);
 
@@ -75,6 +82,12 @@ class WebSocketService {
   }
 
   private attemptReconnect() {
+    const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
+    if (!token) {
+      console.log('WebSocket: No token available, stopping reconnection attempts');
+      return;
+    }
+    
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
@@ -83,7 +96,7 @@ class WebSocketService {
       
       this.reconnectTimeout = setTimeout(() => {
         console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-        this.connect();
+        this.connectInternal();
       }, delay);
     } else {
       this.notifyConnectionStatus('disconnected');
@@ -133,6 +146,10 @@ class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) return 'connected';
     if (this.reconnectAttempts > 0) return 'reconnecting';
     return 'disconnected';
+  }
+
+  public connect() {
+    this.connectInternal();
   }
 
   public disconnect() {

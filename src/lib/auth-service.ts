@@ -77,17 +77,20 @@ class AuthService {
         let user_id: string | undefined;
         
         if (response.data.success && response.data.data) {
-            // Структура: { success: true, data: { access_token, user_id } }
-            access_token = response.data.data.access_token;
-            user_id = response.data.data.user_id;
+            // Структура: { success: true, data: { accessToken, refreshToken, accessExpires } }
+            access_token = response.data.data.accessToken;
+            // Декодируем JWT токен для получения user_id
+            const decodedToken = decodeJwt(access_token);
+            user_id = decodedToken?.user_id;
         } else if (response.data.access_token && response.data.user_id) {
             // Структура: { access_token, user_id }
             access_token = response.data.access_token;
             user_id = response.data.user_id;
-        } else if (response.data.data && response.data.data.access_token) {
-            // Структура: { data: { access_token, user_id } }
-            access_token = response.data.data.access_token;
-            user_id = response.data.data.user_id;
+        } else if (response.data.data && response.data.data.accessToken) {
+            // Структура: { data: { accessToken, refreshToken, accessExpires } }
+            access_token = response.data.data.accessToken;
+            const decodedToken = decodeJwt(access_token);
+            user_id = decodedToken?.user_id;
         }
         
         if (!access_token || !user_id) {
@@ -112,17 +115,20 @@ class AuthService {
         let user_id: string | undefined;
         
         if (response.data.success && response.data.data) {
-            // Структура: { success: true, data: { access_token, user_id } }
-            access_token = response.data.data.access_token;
-            user_id = response.data.data.user_id;
+            // Структура: { success: true, data: { accessToken, refreshToken, accessExpires } }
+            access_token = response.data.data.accessToken;
+            // Декодируем JWT токен для получения user_id
+            const decodedToken = decodeJwt(access_token);
+            user_id = decodedToken?.user_id;
         } else if (response.data.access_token && response.data.user_id) {
             // Структура: { access_token, user_id }
             access_token = response.data.access_token;
             user_id = response.data.user_id;
-        } else if (response.data.data && response.data.data.access_token) {
-            // Структура: { data: { access_token, user_id } }
-            access_token = response.data.data.access_token;
-            user_id = response.data.data.user_id;
+        } else if (response.data.data && response.data.data.accessToken) {
+            // Структура: { data: { accessToken, refreshToken, accessExpires } }
+            access_token = response.data.data.accessToken;
+            const decodedToken = decodeJwt(access_token);
+            user_id = decodedToken?.user_id;
         }
         
         if (!access_token || !user_id) {

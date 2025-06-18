@@ -4,8 +4,9 @@
 export interface AuthResponse {
   success?: boolean;
   data?: {
-    access_token: string;
-    user_id: string;
+    accessToken: string;
+    refreshToken: string;
+    accessExpires: string;
   };
   access_token?: string;
   user_id?: string;
@@ -43,6 +44,12 @@ export interface SearchUsersResponse {
 export interface UserProfileResponse {
   success?: boolean;
   data?: UserProfile;
+  id?: string;
+  nickname?: string;
+  email?: string;
+  about?: string;
+  phone?: string;
+  avatarUrl?: string;
 }
 
 export interface FriendRequestsResponse {
