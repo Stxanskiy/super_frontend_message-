@@ -17,16 +17,13 @@ const Index = () => {
     <ThemeProvider defaultTheme="light">
       <Navigation />
       <div className="relative flex h-screen overflow-hidden">
-        {/* Main sidebar */}
         <Sidebar />
         
-        {/* Conversations */}
         <div className="grid grid-cols-[320px_1fr] flex-1">
           <ConversationList 
             onSelectConversation={(id) => setSelectedConversation(id)} 
           />
           
-          {/* Chat area */}
           <div className="relative">
             {selectedConversation ? (
               <ChatArea conversationId={selectedConversation} />
@@ -43,7 +40,6 @@ const Index = () => {
               </div>
             )}
             
-            {/* Profile button */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -55,7 +51,6 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Profile drawer */}
         <ProfileDrawer 
           open={profileOpen} 
           onClose={() => setProfileOpen(false)} 

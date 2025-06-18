@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { chatService } from '@/lib/chat-service';
 import { Message } from '@/types/chat';
 import { Button } from '@/components/ui/button';
@@ -38,15 +38,14 @@ export const ChatMessages = ({ chatId }: ChatMessagesProps) => {
   const { toast } = useToast();
   const debouncedTyping = useDebounce(isTyping, 1000);
 
-  const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['messages', chatId],
-    queryFn: () => chatService.getMessages(chatId),
-  });
+  // Временные данные для демонстрации (в реальном приложении здесь были бы сообщения из WebSocket)
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => chatService.sendMessage(chatId, content),
-    onSuccess: () => {
+    onSuccess: (newMessage) => {
       setMessage('');
+      setMessages(prev => [...prev, newMessage]);
       queryClient.invalidateQueries({ queryKey: ['messages', chatId] });
     },
   });
@@ -54,7 +53,10 @@ export const ChatMessages = ({ chatId }: ChatMessagesProps) => {
   const editMessageMutation = useMutation({
     mutationFn: ({ messageId, content }: { messageId: string; content: string }) =>
       chatService.editMessage(messageId, content),
-    onSuccess: () => {
+    onSuccess: (updatedMessage) => {
+      setMessages(prev => prev.map(msg => 
+        msg.id === updatedMessage.id ? updatedMessage : msg
+      ));
       queryClient.invalidateQueries({ queryKey: ['messages', chatId] });
       setEditDialogOpen(false);
       setEditingMessage(null);
@@ -64,7 +66,8 @@ export const ChatMessages = ({ chatId }: ChatMessagesProps) => {
 
   const deleteMessageMutation = useMutation({
     mutationFn: chatService.deleteMessage,
-    onSuccess: () => {
+    onSuccess: (_, messageId) => {
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
       queryClient.invalidateQueries({ queryKey: ['messages', chatId] });
       toast({
         title: APP_STRINGS.MESSAGE_DELETED,
@@ -73,16 +76,35 @@ export const ChatMessages = ({ chatId }: ChatMessagesProps) => {
     },
   });
 
-  useEffect(() => {
-    const handleNewMessage = (newMessage: Message) => {
-      queryClient.setQueryData(['messages', chatId], (old: Message[] = []) => [...old, newMessage]);
-    };
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+    sendMessageMutation.mutate(message.trim());
+  };
 
-    chatService.subscribeToMessages(chatId, handleNewMessage);
-    return () => {
-      chatService.unsubscribeFromMessages(chatId, handleNewMessage);
-    };
-  }, [chatId, queryClient]);
+  const handleEditMessage = (msg: Message) => {
+    setEditingMessage(msg);
+    setEditedContent(msg.content);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingMessage || !editedContent.trim()) return;
+    editMessageMutation.mutate({
+      messageId: editingMessage.id,
+      content: editedContent.trim(),
+    });
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    deleteMessageMutation.mutate(messageId);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -98,118 +120,110 @@ export const ChatMessages = ({ chatId }: ChatMessagesProps) => {
     }
   }, [debouncedTyping, chatId]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      sendMessageMutation.mutate(message);
-    }
-  };
-
-  const handleEditMessage = () => {
-    if (editingMessage && editedContent.trim()) {
-      editMessageMutation.mutate({
-        messageId: editingMessage.id,
-        content: editedContent.trim(),
-      });
-    }
-  };
-
-  if (isLoading) {
-    return <div className="p-4">Loading messages...</div>;
-  }
-
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.sender_id === 'current_user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${
-                  msg.sender_id === 'current_user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold">{msg.sender.nickname}</span>
-                  <span className="text-xs opacity-70">
-                    {new Date(msg.created_at).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p>{msg.content}</p>
-                {msg.sender_id === 'current_user' && (
-                  <div className="flex justify-end mt-1">
-                    {msg.status === 'read' ? (
-                      <CheckCheck className="h-3 w-3" />
-                    ) : msg.status === 'delivered' ? (
-                      <Check className="h-3 w-3" />
-                    ) : null}
-                  </div>
-                )}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea ref={scrollRef} className="h-full p-4">
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                {APP_STRINGS.NO_MESSAGES}
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="ml-2">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setEditingMessage(msg);
-                      setEditedContent(msg.content);
-                      setEditDialogOpen(true);
-                    }}
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.senderId === 'current-user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      msg.senderId === 'current-user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
                   >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => deleteMessageMutation.mutate(msg.id)}>
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-      <form onSubmit={handleSendMessage} className="p-4 border-t">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium">
+                        {msg.sender?.nickname || 'Unknown'}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleEditMessage(msg)}>
+                            {APP_STRINGS.EDIT}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="text-destructive"
+                          >
+                            {APP_STRINGS.DELETE}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <p className="mt-1">{msg.content}</p>
+                    <div className="flex items-center justify-between mt-2 text-xs opacity-70">
+                      <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                      {msg.senderId === 'current-user' && (
+                        <div className="flex items-center gap-1">
+                          {msg.status === 'sent' && <Check className="h-3 w-3" />}
+                          {msg.status === 'delivered' && <CheckCheck className="h-3 w-3" />}
+                          {msg.status === 'read' && <CheckCheck className="h-3 w-3 text-blue-500" />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+
+      <div className="border-t p-4">
         <div className="flex gap-2">
           <Input
+            placeholder={APP_STRINGS.TYPE_MESSAGE}
             value={message}
             onChange={(e) => {
               setMessage(e.target.value);
               setIsTyping(true);
             }}
+            onKeyPress={handleKeyPress}
             onBlur={() => setIsTyping(false)}
-            placeholder="Type a message..."
-            disabled={sendMessageMutation.isPending}
           />
-          <Button type="submit" disabled={sendMessageMutation.isPending}>
+          <Button
+            onClick={handleSendMessage}
+            disabled={sendMessageMutation.isPending || !message.trim()}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </form>
+      </div>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Message</DialogTitle>
+            <DialogTitle>{APP_STRINGS.EDIT}</DialogTitle>
           </DialogHeader>
           <Input
             value={editedContent}
             onChange={(e) => setEditedContent(e.target.value)}
-            placeholder="Edit your message..."
+            placeholder={APP_STRINGS.TYPE_MESSAGE}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
+              {APP_STRINGS.CANCEL}
             </Button>
-            <Button onClick={handleEditMessage} disabled={!editedContent.trim()}>
-              Save
+            <Button
+              onClick={handleSaveEdit}
+              disabled={editMessageMutation.isPending || !editedContent.trim()}
+            >
+              {APP_STRINGS.SAVE}
             </Button>
           </DialogFooter>
         </DialogContent>

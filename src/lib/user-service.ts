@@ -1,21 +1,4 @@
-import axios from 'axios';
-import { API_URLS } from './api-client';
-
-const userClient = axios.create({
-  baseURL: API_URLS.user,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-userClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import { userClient } from './api-client';
 
 export interface UserProfile {
   id: string;
@@ -23,24 +6,24 @@ export interface UserProfile {
   email: string;
   about?: string;
   phone?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
 }
 
 export interface UpdateProfileData {
   about?: string;
   phone?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
 }
 
 export interface FriendRequest {
   id: string;
   sender: UserProfile;
   status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
+  createdAt: string;
 }
 
 export const userService = {
-  // Получение профиля пользователя
+  // Получение профиля пользователя по ID
   async getProfile(userId: string): Promise<UserProfile> {
     const response = await userClient.get<UserProfile>(`/users/getByID?id=${userId}`);
     return response.data;

@@ -1,0 +1,155 @@
+{
+	"info": {
+		"_postman_id": "bcbcba2d-855e-4551-a9b0-38dc676a8556",
+		"name": "Messenger Message-Service (WS & Files)",
+		"description": "Postman collection for testing message-service: WebSocket, file sending, chat messages",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36428570"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"email\": \"test@example.com\", \"password\": \"123456\"}"
+				},
+				"url": {
+					"raw": "{{auth_url}}/login",
+					"host": [
+						"{{auth_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Chat",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"\\u0413\\u0440\\u0443\\u043f\\u043f\\u0430\", \"is_group\": true, \"user_ids\": [2]}"
+				},
+				"url": {
+					"raw": "{{msg_url}}/api/v1/chats",
+					"host": [
+						"{{msg_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"chats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Text Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "content",
+							"value": "Привет из Postman",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{msg_url}}/api/v1/chats/{{chat_id}}/messages",
+					"host": [
+						"{{msg_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"chats",
+						"{{chat_id}}",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send File Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/path/to/your/file.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{msg_url}}/api/v1/chats/{{chat_id}}/messages",
+					"host": [
+						"{{msg_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"chats",
+						"{{chat_id}}",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "auth_url",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "msg_url",
+			"value": "http://localhost:8083"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "chat_id",
+			"value": "replace_me"
+		}
+	]
+}

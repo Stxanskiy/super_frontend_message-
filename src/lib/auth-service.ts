@@ -1,8 +1,9 @@
-import { apiClient, setAuthToken } from './api-client';
+import { authClient, setAuthToken } from './api-client';
 import { z } from 'zod';
+import { AuthResponse } from '@/types/api';
 
 type AccessToken = {
-    user_id: string
+    userId: string
 }
 
 function decodeJwt(token: string | undefined): AccessToken | null {
@@ -32,81 +33,60 @@ function decodeJwt(token: string | undefined): AccessToken | null {
 
 export const loginSchema = z.object({
     nickname: z.string()
-        .min(1, "Никнейм должен содержать минимум 2 символа")
+        .min(1, "Никнейм должен содержать минимум 1 символ")
         .max(50, "Никнейм должен быть не более 50 символов"),
     password: z.string()
-        .min(1, "Пароль должен содержать минимум 6 символов")
+        .min(1, "Пароль должен содержать минимум 1 символ")
 });
 
 export const registerSchema = z.object({
     nickname: z.string()
-        .min(2, "Никнейм должен содержать минимум 2 символа")
+        .min(1, "Никнейм должен содержать минимум 1 символ")
         .max(50, "Никнейм должен быть не более 50 символов"),
     email: z.string()
         .email("Неверный формат email"),
     password: z.string()
-        .min(1, "Пароль должен содержать минимум 6 символов")
+        .min(1, "Пароль должен содержать минимум 1 символ")
 });
 
 // Генерируем типы из схем
 export type LoginCredentials = z.infer<typeof loginSchema>;
 export type RegisterCredentials = z.infer<typeof registerSchema>;
 
-export interface AuthResponse {
-    data: {
-        accessToken: string;
-        refreshToken: string;
-    },
-    success: boolean;
-}
-
 class AuthService {
     private token: string | null = null;
-    private refreshToken: string | null = null;
     private userId: string | null = null;
 
     constructor() {
         this.token = localStorage.getItem('token');
-        this.refreshToken = localStorage.getItem('refreshToken');
         this.userId = localStorage.getItem('userId');
     }
 
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-        const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
-        console.log(response)
-        const { data, success } = response.data;
-        const { accessToken, refreshToken } = data;
+        const response = await authClient.post<AuthResponse>('/auth/login', credentials);
+        console.log('Login response:', response.data);
         
-        if (!success || !accessToken) {
-            throw new Error('No access token received');
+        const { accessToken, userId } = response.data;
+        
+        if (!accessToken || !userId) {
+            throw new Error('Invalid response: missing accessToken or userId');
         }
 
-        const decodedToken = decodeJwt(accessToken);
-        console.log(decodedToken)
-        if (!decodedToken?.user_id) {
-            throw new Error('Invalid token format or missing user ID');
-        }
-
-        this.setAuthData(accessToken, refreshToken, decodedToken.user_id);
+        this.setAuthData(accessToken, userId);
         return response.data;
     }
 
     async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-        const response = await apiClient.post<AuthResponse>('/auth/register', credentials);
-        console.log(response)
-        const { data, success } = response.data;
-        const { accessToken, refreshToken } = data;
+        const response = await authClient.post<AuthResponse>('/auth/register', credentials);
+        console.log('Register response:', response.data);
         
-        if (!success || !accessToken) {
-            throw new Error('No access token received');
-        }
-        const decodedToken = decodeJwt(accessToken);
-        console.log("decodedToken", decodedToken)
-        if (!decodedToken?.user_id) {
-            throw new Error('Invalid token format or missing user ID');
+        const { accessToken, userId } = response.data;
+        
+        if (!accessToken || !userId) {
+            throw new Error('Invalid response: missing accessToken or userId');
         }
 
-        this.setAuthData(accessToken, refreshToken, decodedToken.user_id);
+        this.setAuthData(accessToken, userId);
         return response.data;
     }
 
@@ -122,28 +102,24 @@ class AuthService {
         return this.userId;
     }
 
-    getRefreshToken(): string | null {
-        return this.refreshToken;
+    getToken(): string | null {
+        return this.token;
     }
 
-    private setAuthData(token: string, refreshToken: string, userId: string) {
+    private setAuthData(token: string, userId: string) {
         this.token = token;
-        this.refreshToken = refreshToken;
         this.userId = userId;
         localStorage.setItem('token', token);
-        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userId', userId);
         setAuthToken(token);
     }
 
     private clearAuthData() {
         this.token = null;
-        this.refreshToken = null;
         this.userId = null;
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
-        apiClient.defaults.headers.common['Authorization'] = '';
+        localStorage.removeItem('refreshToken'); // Удаляем если есть
     }
 }
 

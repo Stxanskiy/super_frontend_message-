@@ -1,96 +1,67 @@
-import { API_CONFIG } from '@/constants/config';
+import { messageClient } from './api-client';
 import { Chat, Message, CreateChatRequest } from '@/types/chat';
 import { websocketService } from './websocket-service';
 
 class ChatService {
-  private readonly baseUrl = API_CONFIG.API_URL;
-
-  async getChats(): Promise<Chat[]> {
-    const response = await fetch(`${this.baseUrl}/chats`, {
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch chats');
-    }
-    return response.json();
-  }
-
-  async getChat(chatId: string): Promise<Chat> {
-    const response = await fetch(`${this.baseUrl}/chats/${chatId}`, {
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch chat');
-    }
-    return response.json();
-  }
-
-  async getMessages(chatId: string): Promise<Message[]> {
-    const response = await fetch(`${this.baseUrl}/chats/${chatId}/messages`, {
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch messages');
-    }
-    return response.json();
-  }
-
+  // Создание нового чата
   async createChat(data: CreateChatRequest): Promise<Chat> {
-    const response = await fetch(`${this.baseUrl}/chats`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(data),
+    const response = await messageClient.post<Chat>('/api/v1/chats', {
+      name: data.name,
+      is_group: data.isGroup
     });
-    if (!response.ok) {
-      throw new Error('Failed to create chat');
-    }
-    return response.json();
+    return response.data;
   }
 
+  // Переименование чата
+  async renameChat(chatId: string, name: string): Promise<Chat> {
+    const response = await messageClient.put<Chat>(`/api/v1/chats/${chatId}`, {
+      name
+    });
+    return response.data;
+  }
+
+  // Добавление пользователя в чат
+  async addUserToChat(chatId: string, userId: string): Promise<void> {
+    await messageClient.post(`/api/v1/chats/${chatId}/users/${userId}`);
+  }
+
+  // Удаление пользователя из чата
+  async removeUserFromChat(chatId: string, userId: string): Promise<void> {
+    await messageClient.delete(`/api/v1/chats/${chatId}/users/${userId}`);
+  }
+
+  // Отправка текстового сообщения
   async sendMessage(chatId: string, content: string): Promise<Message> {
-    const response = await fetch(`${this.baseUrl}/chats/${chatId}/messages`, {
-      method: 'POST',
+    const formData = new FormData();
+    formData.append('content', content);
+    
+    const response = await messageClient.post<Message>(`/api/v1/chats/${chatId}/messages`, formData, {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
-      credentials: 'include',
-      body: JSON.stringify({ content }),
     });
-    if (!response.ok) {
-      throw new Error('Failed to send message');
-    }
-    return response.json();
+    return response.data;
   }
 
+  // Редактирование сообщения
   async editMessage(messageId: string, content: string): Promise<Message> {
-    const response = await fetch(`${this.baseUrl}/messages/${messageId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ content }),
+    const response = await messageClient.put<Message>(`/api/v1/messages/${messageId}`, {
+      content
     });
-    if (!response.ok) {
-      throw new Error('Failed to edit message');
-    }
-    return response.json();
+    return response.data;
   }
 
+  // Удаление сообщения
   async deleteMessage(messageId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/messages/${messageId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete message');
-    }
+    await messageClient.delete(`/api/v1/messages/${messageId}`);
   }
 
-  // WebSocket methods
+  // Удаление чата
+  async deleteChat(chatId: string): Promise<void> {
+    await messageClient.delete(`/api/v1/chats/${chatId}`);
+  }
+
+  // WebSocket методы для real-time сообщений
   subscribeToMessages(chatId: string, callback: (message: Message) => void) {
     websocketService.subscribe(`chat:${chatId}`, callback);
   }
@@ -100,11 +71,11 @@ class ChatService {
   }
 
   sendMessageViaWebSocket(chatId: string, content: string) {
-    websocketService.send('send_message', { chat_id: chatId, content });
+    websocketService.send('send_message', { chatId, content });
   }
 
   sendTypingStatus(chatId: string, isTyping: boolean) {
-    websocketService.send('typing', { chat_id: chatId, is_typing: isTyping });
+    websocketService.send('typing', { chatId, isTyping });
   }
 }
 

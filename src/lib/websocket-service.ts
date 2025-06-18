@@ -1,25 +1,41 @@
 import { API_CONFIG } from '@/constants/config';
+import { WebSocketMessage, TypingEvent } from '@/types/chat';
 
-type MessageHandler = (data: any) => void;
+type MessageHandler = (data: WebSocketMessage['data']) => void;
+type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | 'error';
+type ConnectionStatusHandler = (data: ConnectionStatusData) => void;
+
+interface ConnectionStatusData {
+  status: ConnectionStatus;
+  attempt: number;
+}
 
 class WebSocketService {
   private ws: WebSocket | null = null;
   private messageHandlers: Map<string, Set<MessageHandler>> = new Map();
+  private connectionStatusHandlers: Set<ConnectionStatusHandler> = new Set();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
-  private messageQueue: Array<{ type: string; payload: any }> = [];
+  private messageQueue: Array<{ type: string; payload: unknown }> = [];
+  private isConnecting = false;
 
   constructor() {
     this.connect();
   }
 
   private connect() {
-    const wsUrl = API_CONFIG.WS_URL;
+    if (this.isConnecting) return;
+    
+    this.isConnecting = true;
+    const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
+    const wsUrl = `${API_CONFIG.WS_URL}?token=${token}`;
+    
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');
+      this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.notifyConnectionStatus('connected');
       this.processMessageQueue();
@@ -27,8 +43,8 @@ class WebSocketService {
 
     this.ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        const { type, payload } = data;
+        const data: WebSocketMessage = JSON.parse(event.data);
+        const { type, data: payload } = data;
         
         const handlers = this.messageHandlers.get(type);
         if (handlers) {
@@ -41,21 +57,21 @@ class WebSocketService {
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
+      this.isConnecting = false;
       this.notifyConnectionStatus('disconnected');
       this.attemptReconnect();
     };
 
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      this.isConnecting = false;
       this.notifyConnectionStatus('error');
     };
   }
 
-  private notifyConnectionStatus(status: 'connected' | 'disconnected' | 'reconnecting' | 'error') {
-    const handlers = this.messageHandlers.get('connection_status');
-    if (handlers) {
-      handlers.forEach(handler => handler({ status, attempt: this.reconnectAttempts }));
-    }
+  private notifyConnectionStatus(status: ConnectionStatus) {
+    const statusData: ConnectionStatusData = { status, attempt: this.reconnectAttempts };
+    this.connectionStatusHandlers.forEach(handler => handler(statusData));
   }
 
   private attemptReconnect() {
@@ -94,7 +110,15 @@ class WebSocketService {
     this.messageHandlers.get(type)?.delete(handler);
   }
 
-  public send(type: string, payload: any) {
+  public subscribeToConnectionStatus(handler: ConnectionStatusHandler) {
+    this.connectionStatusHandlers.add(handler);
+  }
+
+  public unsubscribeFromConnectionStatus(handler: ConnectionStatusHandler) {
+    this.connectionStatusHandlers.delete(handler);
+  }
+
+  public send(type: string, payload: unknown) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, payload }));
     } else {
@@ -102,6 +126,13 @@ class WebSocketService {
       this.messageQueue.push({ type, payload });
       console.warn('WebSocket is not connected. Message queued for later delivery.');
     }
+  }
+
+  public getConnectionStatus(): 'connecting' | 'connected' | 'disconnected' | 'reconnecting' {
+    if (this.isConnecting) return 'connecting';
+    if (this.ws?.readyState === WebSocket.OPEN) return 'connected';
+    if (this.reconnectAttempts > 0) return 'reconnecting';
+    return 'disconnected';
   }
 
   public disconnect() {
@@ -112,6 +143,7 @@ class WebSocketService {
       this.ws.close();
       this.ws = null;
     }
+    this.isConnecting = false;
   }
 }
 

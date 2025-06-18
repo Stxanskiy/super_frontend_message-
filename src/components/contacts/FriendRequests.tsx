@@ -33,24 +33,6 @@ export const FriendRequests = () => {
     },
   });
 
-  const rejectMutation = useMutation({
-    mutationFn: contactsService.rejectFriendRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
-      toast({
-        title: APP_STRINGS.FRIEND_REQUEST_REJECTED,
-        description: APP_STRINGS.FRIEND_REQUEST_REJECTED_SUCCESS,
-      });
-    },
-    onError: () => {
-      toast({
-        title: APP_STRINGS.ERROR,
-        description: APP_STRINGS.FRIEND_REQUEST_REJECT_ERROR,
-        variant: 'destructive',
-      });
-    },
-  });
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -82,13 +64,6 @@ export const FriendRequests = () => {
                   onClick={() => acceptMutation.mutate(request.sender.id)}
                 >
                   {APP_STRINGS.ACCEPT}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => rejectMutation.mutate(request.sender.id)}
-                >
-                  {APP_STRINGS.REJECT}
                 </Button>
               </div>
             </div>

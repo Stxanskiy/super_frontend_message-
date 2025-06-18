@@ -7,14 +7,14 @@ export interface Contact {
   email: string;
   about?: string;
   phone?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
 }
 
 export interface FriendRequest {
   id: string;
   sender: Contact;
   status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
+  createdAt: string;
 }
 
 export const contactsService = {
@@ -38,11 +38,6 @@ export const contactsService = {
   // Принять заявку в друзья
   acceptFriendRequest: async (userId: string): Promise<void> => {
     await apiClient.post(`/contacts/accept/${userId}`);
-  },
-
-  // Отклонить заявку в друзья
-  rejectFriendRequest: async (userId: string): Promise<void> => {
-    await apiClient.post(`/contacts/reject/${userId}`);
   },
 
   // Поиск пользователей по никнейму

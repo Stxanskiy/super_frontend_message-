@@ -1,14 +1,14 @@
 export interface Message {
   id: string;
   content: string;
-  sender_id: string;
-  chat_id: string;
-  created_at: string;
-  updated_at: string;
+  senderId: string;
+  chatId: string;
+  createdAt: string;
+  updatedAt: string;
   sender: {
     id: string;
     nickname: string;
-    avatar_url?: string;
+    avatarUrl?: string;
   };
   status: 'sending' | 'sent' | 'delivered' | 'read';
 }
@@ -16,15 +16,37 @@ export interface Message {
 export interface Chat {
   id: string;
   name: string;
-  is_group: boolean;
+  isGroup: boolean;
   participants: string[];
   lastMessage?: Message;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateChatRequest {
   name: string;
-  is_group: boolean;
-  participants: string[];
+  isGroup: boolean;
+  participants?: string[];
+}
+
+export interface ChatMember {
+  id: string;
+  nickname: string;
+  avatarUrl?: string;
+}
+
+export interface ChatDetails extends Chat {
+  members: ChatMember[];
+  messageCount: number;
+}
+
+export interface WebSocketMessage {
+  type: 'message' | 'typing' | 'user_joined' | 'user_left';
+  data: Message | TypingEvent | ChatMember;
+}
+
+export interface TypingEvent {
+  chatId: string;
+  userId: string;
+  isTyping: boolean;
 } 

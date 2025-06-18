@@ -1,30 +1,62 @@
-import axios from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { authService, LoginCredentials, RegisterCredentials } from '@/lib/auth-service';
+import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8080'; // URL сервиса регистрации/авторизации
+// Хук для входа в систему
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
+  return useMutation({
+    mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
+    onSuccess: (data) => {
+      console.log('Login successful:', data);
+      // Инвалидируем кеш пользователя
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      // Перенаправляем на главную страницу
+      navigate('/');
+    },
+    onError: (error) => {
+      console.error('Login failed:', error);
+    },
+  });
+};
 
-interface SignupData {
-    nickname: string;
-    email: string;
-    password: string;
-}
-export async function signUp({nickname, email, password}:SignupData) {
-    const response = await axios.post(`${API_URL}/auth/register`, {
-        nickname,
-        email,
-        password,
-    });
-    return response.data; // { id, nickname }
-}
+// Хук для регистрации
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-interface LoginData {
-    nickname: string;
-    password: string;
-}
-export async function login({nickname, password}:LoginData) {
-    const response = await axios.post(`${API_URL}/auth/login`, {
-        nickname,
-        password,
-    });
-    return response.data; // { access_token, refresh_token }
-}
+  return useMutation({
+    mutationFn: (credentials: RegisterCredentials) => authService.register(credentials),
+    onSuccess: (data) => {
+      console.log('Registration successful:', data);
+      // Инвалидируем кеш пользователя
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      // Перенаправляем на главную страницу
+      navigate('/');
+    },
+    onError: (error) => {
+      console.error('Registration failed:', error);
+    },
+  });
+};
+
+// Хук для выхода из системы
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: () => {
+      authService.logout();
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      // Очищаем весь кеш
+      queryClient.clear();
+      // Перенаправляем на страницу входа
+      navigate('/login');
+    },
+  });
+};
