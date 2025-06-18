@@ -6,9 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { authService, RegisterCredentials, registerSchema } from "@/lib/auth-service";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export function RegisterForm() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -25,6 +27,7 @@ export function RegisterForm() {
             setIsLoading(true);
             setError(null);
             const response = await authService.register(data);
+            login();
             navigate('/');
         } catch (error) {
             console.error('Ошибка при регистрации:', error);

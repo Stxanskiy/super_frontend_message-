@@ -6,60 +6,58 @@ import NotFound from '@/pages/NotFound';
 import ProfilePage from '@/pages/ProfilePage';
 import ContactsPage from '@/pages/ContactsPage';
 import ChatPage from '@/pages/ChatPage';
-import { authService } from '@/lib/auth-service';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated, checkAuth } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const location = useLocation();
 
     useEffect(() => {
-        const checkAuth = () => {
-            const isAuth = authService.isAuthenticated();
-            setIsAuthenticated(isAuth);
-            setIsLoading(false);
-        };
-
+        console.log('🛡️ ProtectedRoute check:', { isAuthenticated, pathname: location.pathname });
         checkAuth();
-    }, [location.pathname]);
+        setIsLoading(false);
+    }, [checkAuth, location.pathname]);
 
     if (isLoading) {
+        console.log('⏳ ProtectedRoute loading...');
         return null; // или компонент загрузки
     }
 
     if (!isAuthenticated) {
+        console.log('❌ ProtectedRoute redirecting to login');
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    console.log('✅ ProtectedRoute allowing access');
     return <>{children}</>;
 };
 
 // Публичный роут (доступен только для неавторизованных пользователей)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated, checkAuth } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const location = useLocation();
 
     useEffect(() => {
-        const checkAuth = () => {
-            const isAuth = authService.isAuthenticated();
-            setIsAuthenticated(isAuth);
-            setIsLoading(false);
-        };
-
+        console.log('🌐 PublicRoute check:', { isAuthenticated, pathname: location.pathname });
         checkAuth();
-    }, [location.pathname]);
+        setIsLoading(false);
+    }, [checkAuth, location.pathname]);
 
     if (isLoading) {
+        console.log('⏳ PublicRoute loading...');
         return null; // или компонент загрузки
     }
 
     if (isAuthenticated) {
         const from = location.state?.from?.pathname || '/';
+        console.log('✅ PublicRoute redirecting authenticated user to:', from);
         return <Navigate to={from} replace />;
     }
 
+    console.log('✅ PublicRoute allowing access');
     return <>{children}</>;
 };
 

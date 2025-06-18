@@ -1,13 +1,16 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { authService } from '@/lib/auth-service';
+import { useAuth } from '@/context/AuthContext';
 import { APP_STRINGS } from '@/constants/strings';
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    authService.logout();
+    logout();
+    navigate('/login');
   };
 
   return (

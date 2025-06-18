@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { userService, UserProfile, UpdateProfileData } from "@/lib/user-service";
-import { authService } from "@/lib/auth-service";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Loader2, LogOut, Save } from "lucide-react";
 
@@ -15,13 +15,14 @@ interface ProfileDrawerProps {
 
 export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileData>({
     about: '',
     phone: '',
-    avatar_url: ''
+    avatarUrl: ''
   });
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
       setFormData({
         about: userProfile.about || '',
         phone: userProfile.phone || '',
-        avatar_url: userProfile.avatar_url || ''
+        avatarUrl: userProfile.avatarUrl || ''
       });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -63,7 +64,7 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
   };
 
   const handleLogout = () => {
-    authService.logout();
+    logout();
     navigate('/login');
   };
 
@@ -113,8 +114,8 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
                 <div>
                   <label className="text-sm font-medium">URL аватара</label>
                   <Input
-                    value={formData.avatar_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, avatar_url: e.target.value }))}
+                    value={formData.avatarUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, avatarUrl: e.target.value }))}
                     placeholder="https://example.com/avatar.jpg"
                   />
                 </div>

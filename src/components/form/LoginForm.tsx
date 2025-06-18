@@ -7,10 +7,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authService, LoginCredentials, loginSchema } from "@/lib/auth-service";
 import { useState } from "react";
 import { AxiosError } from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 export function LoginForm() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { login } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -29,6 +31,7 @@ export function LoginForm() {
             setIsLoading(true);
             setError(null);
             await authService.login(data);
+            login();
             navigate(from, { replace: true });
         } catch (error: unknown) {
             if (error instanceof AxiosError) {

@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { AuthResponse } from '@/types/api';
 
 type AccessToken = {
-    userId: string
+    user_id: string;
+    exp: number;
+    iat: number;
 }
 
 function decodeJwt(token: string | undefined): AccessToken | null {
@@ -24,7 +26,9 @@ function decodeJwt(token: string | undefined): AccessToken | null {
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
-        return JSON.parse(jsonPayload) as AccessToken;
+        const decoded = JSON.parse(jsonPayload) as AccessToken;
+        console.log('🔓 Decoded JWT:', decoded);
+        return decoded;
     } catch (error) {
         console.error('Error decoding JWT:', error);
         return null;
@@ -64,41 +68,65 @@ class AuthService {
 
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         const response = await authClient.post<AuthResponse>('/auth/login', credentials);
-        console.log('Login response:', response.data);
+        console.log('🔐 AuthService login response:', response.data);
         
-        const { accessToken, userId } = response.data;
+        const { data } = response.data;
         
-        if (!accessToken || !userId) {
-            throw new Error('Invalid response: missing accessToken or userId');
+        if (!data.accessToken) {
+            throw new Error('Invalid response: missing accessToken');
         }
 
-        this.setAuthData(accessToken, userId);
+        // Извлекаем userId из JWT токена
+        const decodedToken = decodeJwt(data.accessToken);
+        if (!decodedToken || !decodedToken.user_id) {
+            throw new Error('Invalid token: missing user_id');
+        }
+
+        console.log('💾 AuthService setting auth data:', { 
+            accessToken: data.accessToken.substring(0, 20) + '...', 
+            userId: decodedToken.user_id 
+        });
+        this.setAuthData(data.accessToken, decodedToken.user_id);
         return response.data;
     }
 
     async register(credentials: RegisterCredentials): Promise<AuthResponse> {
         const response = await authClient.post<AuthResponse>('/auth/register', credentials);
-        console.log('Register response:', response.data);
+        console.log('📝 AuthService register response:', response.data);
         
-        const { accessToken, userId } = response.data;
+        const { data } = response.data;
         
-        if (!accessToken || !userId) {
-            throw new Error('Invalid response: missing accessToken or userId');
+        if (!data.accessToken) {
+            throw new Error('Invalid response: missing accessToken');
         }
 
-        this.setAuthData(accessToken, userId);
+        // Извлекаем userId из JWT токена
+        const decodedToken = decodeJwt(data.accessToken);
+        if (!decodedToken || !decodedToken.user_id) {
+            throw new Error('Invalid token: missing user_id');
+        }
+
+        console.log('💾 AuthService setting auth data:', { 
+            accessToken: data.accessToken.substring(0, 20) + '...', 
+            userId: decodedToken.user_id 
+        });
+        this.setAuthData(data.accessToken, decodedToken.user_id);
         return response.data;
     }
 
     logout() {
+        console.log('🚪 AuthService logout called');
         this.clearAuthData();
     }
 
     isAuthenticated(): boolean {
-        return !!this.token;
+        const result = !!this.token;
+        console.log('🔍 AuthService isAuthenticated:', { result, token: this.token ? 'exists' : 'null' });
+        return result;
     }
 
     getUserId(): string | null {
+        console.log('👤 AuthService getUserId:', this.userId);
         return this.userId;
     }
 
@@ -107,6 +135,7 @@ class AuthService {
     }
 
     private setAuthData(token: string, userId: string) {
+        console.log('💾 AuthService setAuthData:', { token: token.substring(0, 20) + '...', userId });
         this.token = token;
         this.userId = userId;
         localStorage.setItem('token', token);
@@ -115,6 +144,7 @@ class AuthService {
     }
 
     private clearAuthData() {
+        console.log('🧹 AuthService clearAuthData');
         this.token = null;
         this.userId = null;
         localStorage.removeItem('token');

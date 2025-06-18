@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ChevronRight, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { authService } from "@/lib/auth-service"
+import { useAuth } from "@/context/AuthContext"
 import { useNavigate } from "react-router-dom"
 
 interface ProfileDrawerProps {
@@ -18,9 +18,10 @@ interface ProfileDrawerProps {
 
 export function ProfileDrawer({ open, onClose, className }: ProfileDrawerProps) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    authService.logout();
+    logout();
     navigate('/login');
   };
 

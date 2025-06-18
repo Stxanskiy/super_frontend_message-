@@ -2,8 +2,12 @@
 
 // Auth API
 export interface AuthResponse {
-  accessToken: string;
-  userId: string;
+  success: boolean;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    accessExpires: string;
+  };
 }
 
 // User API
