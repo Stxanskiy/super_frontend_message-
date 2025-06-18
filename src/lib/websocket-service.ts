@@ -1,5 +1,5 @@
 import { API_CONFIG } from '@/constants/config';
-import { WebSocketMessage, TypingEvent } from '@/types/chat';
+import { WebSocketMessage, TypingEvent } from '@/types/api';
 
 type MessageHandler = (data: WebSocketMessage['data']) => void;
 type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | 'error';

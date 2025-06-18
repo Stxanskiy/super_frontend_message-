@@ -1,20 +1,29 @@
-import { messageClient } from './api-client';
-import { Chat, Message, CreateChatRequest } from '@/types/chat';
+import { apiClient } from './api-client';
+import { Chat, Message, CreateChatRequest, SendMessageRequest } from '@/types/api';
 import { websocketService } from './websocket-service';
 
 class ChatService {
+  // Получение списка чатов
+  async getChats(): Promise<Chat[]> {
+    const response = await apiClient.get<Chat[]>('/api/v1/chats/history');
+    return response.data;
+  }
+
+  // Получение сообщений чата
+  async getChatMessages(chatId: string): Promise<Message[]> {
+    const response = await apiClient.get<Message[]>(`/api/v1/chats/${chatId}/messages/history`);
+    return response.data;
+  }
+
   // Создание нового чата
-  async createChat(data: CreateChatRequest): Promise<Chat> {
-    const response = await messageClient.post<Chat>('/api/v1/chats', {
-      name: data.name,
-      is_group: data.isGroup
-    });
+  async createChat(chatData: CreateChatRequest): Promise<Chat> {
+    const response = await apiClient.post<Chat>('/api/v1/chats', chatData);
     return response.data;
   }
 
   // Переименование чата
   async renameChat(chatId: string, name: string): Promise<Chat> {
-    const response = await messageClient.put<Chat>(`/api/v1/chats/${chatId}`, {
+    const response = await apiClient.put<Chat>(`/api/v1/chats/${chatId}`, {
       name
     });
     return response.data;
@@ -22,30 +31,23 @@ class ChatService {
 
   // Добавление пользователя в чат
   async addUserToChat(chatId: string, userId: string): Promise<void> {
-    await messageClient.post(`/api/v1/chats/${chatId}/users/${userId}`);
+    await apiClient.post(`/api/v1/chats/${chatId}/users/${userId}`);
   }
 
   // Удаление пользователя из чата
   async removeUserFromChat(chatId: string, userId: string): Promise<void> {
-    await messageClient.delete(`/api/v1/chats/${chatId}/users/${userId}`);
+    await apiClient.delete(`/api/v1/chats/${chatId}/users/${userId}`);
   }
 
   // Отправка текстового сообщения
-  async sendMessage(chatId: string, content: string): Promise<Message> {
-    const formData = new FormData();
-    formData.append('content', content);
-    
-    const response = await messageClient.post<Message>(`/api/v1/chats/${chatId}/messages`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  async sendMessage(chatId: string, messageData: SendMessageRequest): Promise<Message> {
+    const response = await apiClient.post<Message>(`/api/v1/chats/${chatId}/messages`, messageData);
     return response.data;
   }
 
   // Редактирование сообщения
   async editMessage(messageId: string, content: string): Promise<Message> {
-    const response = await messageClient.put<Message>(`/api/v1/messages/${messageId}`, {
+    const response = await apiClient.put<Message>(`/api/v1/messages/${messageId}`, {
       content
     });
     return response.data;
@@ -53,21 +55,25 @@ class ChatService {
 
   // Удаление сообщения
   async deleteMessage(messageId: string): Promise<void> {
-    await messageClient.delete(`/api/v1/messages/${messageId}`);
+    await apiClient.delete(`/api/v1/messages/${messageId}`);
   }
 
   // Удаление чата
   async deleteChat(chatId: string): Promise<void> {
-    await messageClient.delete(`/api/v1/chats/${chatId}`);
+    await apiClient.delete(`/api/v1/chats/${chatId}`);
   }
 
   // WebSocket методы для real-time сообщений
   subscribeToMessages(chatId: string, callback: (message: Message) => void) {
-    websocketService.subscribe(`chat:${chatId}`, callback);
+    websocketService.subscribe(`chat:${chatId}`, (data) => {
+      if ('content' in data) {
+        callback(data as Message);
+      }
+    });
   }
 
-  unsubscribeFromMessages(chatId: string, callback: (message: Message) => void) {
-    websocketService.unsubscribe(`chat:${chatId}`, callback);
+  unsubscribeFromMessages(chatId: string) {
+    websocketService.unsubscribe(`chat:${chatId}`, () => {});
   }
 
   sendMessageViaWebSocket(chatId: string, content: string) {

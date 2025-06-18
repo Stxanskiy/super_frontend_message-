@@ -15,22 +15,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     useEffect(() => {
-        console.log('🛡️ ProtectedRoute check:', { isAuthenticated, pathname: location.pathname });
         checkAuth();
         setIsLoading(false);
     }, [checkAuth, location.pathname]);
 
     if (isLoading) {
-        console.log('⏳ ProtectedRoute loading...');
         return null; // или компонент загрузки
     }
 
     if (!isAuthenticated) {
-        console.log('❌ ProtectedRoute redirecting to login');
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    console.log('✅ ProtectedRoute allowing access');
     return <>{children}</>;
 };
 
@@ -41,23 +37,19 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
 
     useEffect(() => {
-        console.log('🌐 PublicRoute check:', { isAuthenticated, pathname: location.pathname });
         checkAuth();
         setIsLoading(false);
     }, [checkAuth, location.pathname]);
 
     if (isLoading) {
-        console.log('⏳ PublicRoute loading...');
         return null; // или компонент загрузки
     }
 
     if (isAuthenticated) {
         const from = location.state?.from?.pathname || '/';
-        console.log('✅ PublicRoute redirecting authenticated user to:', from);
         return <Navigate to={from} replace />;
     }
 
-    console.log('✅ PublicRoute allowing access');
     return <>{children}</>;
 };
 

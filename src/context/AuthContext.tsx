@@ -19,18 +19,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkAuth = () => {
         const isAuth = authService.isAuthenticated();
         const currentUserId = authService.getUserId();
-        console.log('🔍 AuthContext checkAuth:', { isAuth, currentUserId });
         setIsAuthenticated(isAuth);
         setUserId(currentUserId);
     };
 
     const login = () => {
-        console.log('🔑 AuthContext login called');
         checkAuth();
     };
 
     const logout = () => {
-        console.log('🚪 AuthContext logout called');
         authService.logout();
         setIsAuthenticated(false);
         setUserId(null);
@@ -38,14 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Проверяем авторизацию при инициализации
     useEffect(() => {
-        console.log('🚀 AuthContext initialized');
         checkAuth();
     }, []);
-
-    // Отладочный эффект для отслеживания изменений состояния
-    useEffect(() => {
-        console.log('📊 AuthContext state changed:', { isAuthenticated, userId });
-    }, [isAuthenticated, userId]);
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, userId, login, logout, checkAuth }}>

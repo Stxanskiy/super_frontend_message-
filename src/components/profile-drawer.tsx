@@ -44,9 +44,9 @@ export function ProfileDrawer({ open, onClose, className }: ProfileDrawerProps) 
         <div className="flex flex-col items-center mb-6">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src="" />
-            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">ПИ</AvatarFallback>
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">П</AvatarFallback>
           </Avatar>
-          <h3 className="text-lg font-medium">Петр Иванов</h3>
+          <h3 className="text-lg font-medium">Профиль</h3>
           <p className="text-sm text-muted-foreground">Онлайн</p>
         </div>
         
@@ -59,15 +59,15 @@ export function ProfileDrawer({ open, onClose, className }: ProfileDrawerProps) 
           <TabsContent value="account" className="space-y-6 mt-6">
             <div className="space-y-2">
               <Label htmlFor="name">Имя</Label>
-              <Input id="name" defaultValue="Петр Иванов" />
+              <Input id="name" placeholder="Введите имя" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" defaultValue="petr@example.com" />
+              <Input id="email" placeholder="Введите email" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Статус</Label>
-              <Input id="status" defaultValue="Всегда на связи" />
+              <Input id="status" placeholder="Введите статус" />
             </div>
             
             <div className="pt-4 space-y-4">

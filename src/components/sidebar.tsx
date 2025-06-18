@@ -1,10 +1,10 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bell, MessageSquare, Settings, Users, Menu, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/context/AuthContext"
 
 interface SidebarProps {
   className?: string
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const { userId } = useAuth()
 
   return (
     <div 
@@ -62,11 +63,11 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src="" />
-            <AvatarFallback className="bg-primary text-primary-foreground">ПИ</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground">П</AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-sidebar-foreground">Петр Иванов</span>
+              <span className="text-sm font-medium text-sidebar-foreground">Пользователь</span>
               <span className="text-xs text-muted-foreground">Online</span>
             </div>
           )}

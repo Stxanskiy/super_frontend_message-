@@ -2,12 +2,8 @@
 
 // Auth API
 export interface AuthResponse {
-  success: boolean;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    accessExpires: string;
-  };
+  access_token: string;
+  user_id: string;
 }
 
 // User API
@@ -33,14 +29,24 @@ export interface FriendRequest {
   createdAt: string;
 }
 
-// Message API
+// Chat API
+export interface Chat {
+  id: string;
+  name: string;
+  is_group: boolean;
+  participants: string[];
+  last_message?: Message;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Message {
   id: string;
   content: string;
-  senderId: string;
-  chatId: string;
-  createdAt: string;
-  updatedAt: string;
+  sender_id: string;
+  chat_id: string;
+  created_at: string;
+  updated_at: string;
   sender: {
     id: string;
     nickname: string;
@@ -49,27 +55,14 @@ export interface Message {
   status: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
-export interface Chat {
-  id: string;
-  name: string;
-  isGroup: boolean;
-  participants: string[];
-  lastMessage?: Message;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CreateChatRequest {
   name: string;
-  isGroup: boolean;
+  is_group: boolean;
+  user_ids: string[];
 }
 
-export interface EditMessageRequest {
+export interface SendMessageRequest {
   content: string;
-}
-
-export interface RenameChatRequest {
-  name: string;
 }
 
 // WebSocket

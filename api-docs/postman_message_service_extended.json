@@ -1,0 +1,98 @@
+{
+  "info": {
+    "name": "Messenger Message\u2011Service \u2013 Extended",
+    "_postman_id": "b00973d2-124b-47ed-9a45-f5e0f0c6f57e",
+    "description": "Collection for testing chats history and full message history endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "msg_url",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "chat_id",
+      "value": "replace_me"
+    }
+  ],
+  "item": [
+    {
+      "name": "Chats History (my)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{msg_url}}/api/v1/chats/history",
+          "host": [
+            "{{msg_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "chats",
+            "history"
+          ]
+        }
+      }
+    },
+    {
+      "name": "All Chats (admin only)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{msg_url}}/api/v1/chats/all",
+          "host": [
+            "{{msg_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "chats",
+            "all"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Full Message History",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{msg_url}}/api/v1/chats/{{chat_id}}/messages/history",
+          "host": [
+            "{{msg_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "chats",
+            "{{chat_id}}",
+            "messages",
+            "history"
+          ]
+        }
+      }
+    }
+  ]
+}

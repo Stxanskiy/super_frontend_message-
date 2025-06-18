@@ -1,17 +1,12 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Paperclip, Phone, Send, Video } from "lucide-react"
-import { useState } from "react"
-
-interface Message {
-  id: string
-  content: string
-  timestamp: string
-  sender: "user" | "contact"
-}
+import { useState, useEffect } from "react"
+import { Message, Chat } from "@/types/api"
+import { chatService } from "@/lib/chat-service"
+import { useAuth } from "@/context/AuthContext"
 
 interface ChatAreaProps {
   className?: string
@@ -20,51 +15,72 @@ interface ChatAreaProps {
 
 export function ChatArea({ className, conversationId }: ChatAreaProps) {
   const [messageInput, setMessageInput] = useState("")
-  
-  // Mock data
-  const contactName = "Анна Петрова"
-  const messages: Message[] = [
-    {
-      id: "1",
-      content: "Привет! Как дела?",
-      timestamp: "14:30",
-      sender: "contact"
-    },
-    {
-      id: "2",
-      content: "Привет! Всё отлично, спасибо. Как у тебя?",
-      timestamp: "14:32",
-      sender: "user"
-    },
-    {
-      id: "3",
-      content: "Тоже хорошо. Работаю над новым проектом.",
-      timestamp: "14:33",
-      sender: "contact"
-    },
-    {
-      id: "4",
-      content: "Интересно! Расскажешь подробнее?",
-      timestamp: "14:35",
-      sender: "user"
-    },
-    {
-      id: "5",
-      content: "Конечно! Это веб-приложение с современным дизайном. Использую новые технологии и интересные решения для пользовательского интерфейса.",
-      timestamp: "14:36",
-      sender: "contact"
-    },
-  ]
+  const [messages, setMessages] = useState<Message[]>([])
+  const [currentChat, setCurrentChat] = useState<Chat | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { userId } = useAuth()
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (conversationId) {
+      loadChatData()
+      loadMessages()
+    }
+  }, [conversationId])
+
+  const loadChatData = async () => {
+    if (!conversationId) return
+    
+    try {
+      const chats = await chatService.getChats()
+      const chat = chats.find(c => c.id === conversationId)
+      setCurrentChat(chat || null)
+    } catch (error) {
+      console.error('Error loading chat data:', error)
+    }
+  }
+
+  const loadMessages = async () => {
+    if (!conversationId) return
+    
+    try {
+      setIsLoading(true)
+      const messagesData = await chatService.getChatMessages(conversationId)
+      setMessages(messagesData)
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!messageInput.trim()) return
+    if (!messageInput.trim() || !conversationId) return
     
-    // Here you would typically send the message to your backend
-    console.log("Sending message:", messageInput)
-    
-    // Clear the input
-    setMessageInput("")
+    try {
+      const newMessage = await chatService.sendMessage(conversationId, {
+        content: messageInput
+      })
+      setMessages(prev => [...prev, newMessage])
+      setMessageInput("")
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
+  }
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('ru-RU', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
+
+  if (!conversationId) {
+    return (
+      <div className={cn("flex flex-col h-full items-center justify-center", className)}>
+        <div className="text-muted-foreground">Выберите чат для начала общения</div>
+      </div>
+    )
   }
 
   return (
@@ -74,10 +90,12 @@ export function ChatArea({ className, conversationId }: ChatAreaProps) {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src="" />
-            <AvatarFallback className="bg-primary/10 text-primary font-medium">АП</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              {currentChat?.name.split(" ").map(n => n[0]).join("") || "Ч"}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="font-medium">{contactName}</h2>
+            <h2 className="font-medium">{currentChat?.name || "Загрузка..."}</h2>
             <p className="text-xs text-muted-foreground">В сети</p>
           </div>
         </div>
@@ -93,14 +111,26 @@ export function ChatArea({ className, conversationId }: ChatAreaProps) {
       
       {/* Messages area */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}>
-            <div className={cn("message-bubble", message.sender === "user" ? "sent" : "received")}>
-              <p>{message.content}</p>
-              <span className={cn("text-xs", message.sender === "user" ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>{message.timestamp}</span>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">Загрузка сообщений...</div>
           </div>
-        ))}
+        ) : messages.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">Нет сообщений</div>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div key={message.id} className={cn("flex", message.sender_id === userId ? "justify-end" : "justify-start")}>
+              <div className={cn("message-bubble", message.sender_id === userId ? "sent" : "received")}>
+                <p>{message.content}</p>
+                <span className={cn("text-xs", message.sender_id === userId ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>
+                  {formatTime(message.created_at)}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       
       {/* Message input */}
