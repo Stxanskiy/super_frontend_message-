@@ -29,6 +29,10 @@ export interface FriendRequest {
   createdAt: string;
 }
 
+export interface SearchUsersResponse {
+  users: UserProfile[];
+}
+
 // Chat API
 export interface Chat {
   id: string;

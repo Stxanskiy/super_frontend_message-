@@ -9,9 +9,10 @@ import { chatService } from "@/lib/chat-service"
 interface ConversationListProps {
   className?: string
   onSelectConversation: (id: string) => void
+  refreshTrigger?: number
 }
 
-export function ConversationList({ className, onSelectConversation }: ConversationListProps) {
+export function ConversationList({ className, onSelectConversation, refreshTrigger }: ConversationListProps) {
   const [activeConversation, setActiveConversation] = useState<string | null>(null)
   const [chats, setChats] = useState<Chat[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -19,7 +20,7 @@ export function ConversationList({ className, onSelectConversation }: Conversati
 
   useEffect(() => {
     loadChats()
-  }, [])
+  }, [refreshTrigger])
 
   const loadChats = async () => {
     try {

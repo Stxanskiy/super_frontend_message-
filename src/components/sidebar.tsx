@@ -23,7 +23,7 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && <h1 className="text-xl font-semibold text-sidebar-foreground">Messenger</h1>}
+        {!collapsed && <h1 className="text-xl font-semibold text-sidebar-foreground">Мессенджер</h1>}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -39,22 +39,22 @@ export function Sidebar({ className }: SidebarProps) {
           <Button variant="ghost" className={cn("flex justify-start gap-3 text-sidebar-foreground",
             collapsed && "justify-center px-0")}>
             <MessageSquare className="h-5 w-5" />
-            {!collapsed && <span>Messages</span>}
+            {!collapsed && <span>Сообщения</span>}
           </Button>
           <Button variant="ghost" className={cn("flex justify-start gap-3 text-sidebar-foreground",
             collapsed && "justify-center px-0")}>
             <Users className="h-5 w-5" />
-            {!collapsed && <span>Contacts</span>}
+            {!collapsed && <span>Контакты</span>}
           </Button>
           <Button variant="ghost" className={cn("flex justify-start gap-3 text-sidebar-foreground",
             collapsed && "justify-center px-0")}>
             <Bell className="h-5 w-5" />
-            {!collapsed && <span>Notifications</span>}
+            {!collapsed && <span>Уведомления</span>}
           </Button>
           <Button variant="ghost" className={cn("flex justify-start gap-3 text-sidebar-foreground",
             collapsed && "justify-center px-0")}>
             <Settings className="h-5 w-5" />
-            {!collapsed && <span>Settings</span>}
+            {!collapsed && <span>Настройки</span>}
           </Button>
         </nav>
       </div>
@@ -68,7 +68,7 @@ export function Sidebar({ className }: SidebarProps) {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-medium text-sidebar-foreground">Пользователь</span>
-              <span className="text-xs text-muted-foreground">Online</span>
+              <span className="text-xs text-muted-foreground">В сети</span>
             </div>
           )}
           {!collapsed && <ThemeToggle />}
